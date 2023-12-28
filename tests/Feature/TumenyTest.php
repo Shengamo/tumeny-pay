@@ -90,9 +90,9 @@ class TumenyTest extends TestCase
 
     }
 
-    public function test_order_status_is_updated()
-    {
-//        create an order with a status of pending
-//
-    }
+//    public function test_order_status_is_updated()
+//    {
+////        create an order with a status of pending
+////
+//    }
 }

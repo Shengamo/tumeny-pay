@@ -4,34 +4,27 @@ namespace Shengamo\TumenyPay\Services;
 
 class FormatterService
 {
-    function __construct()
-    {
-    }
     /**
      * convertToK convert 1000 to K
-     *
-     * @param  mixed $n
-     * @return void
+
      */
-    public static function convertToK($n)
+    public static function convertToK(int $value): int|string
     {
-        if ($n < 1000) {
-            return $n;
+        if ($value < 1000) {
+            return $value;
         }
         $suffix = ['','k','M','G','T','P','E','Z','Y'];
-        $power = floor(log($n, 1000));
-        return round($n/(1000**$power), 1, PHP_ROUND_HALF_EVEN).$suffix[$power];
+        $power = floor(log($value, 1000));
+        return round($value/(1000**$power), 1, PHP_ROUND_HALF_EVEN).$suffix[$power];
     }
 
-    public static function ngweeToKwacha($value)
+    public static function ngweeToKwacha($value): string
     {
-        $converted = number_format(($value /100), 2, '.', '');
-        return $converted;
+        return number_format(($value /100), 2, '.', '');
     }
 
-    public static function kwachaToNgwee($value)
+    public static function kwachaToNgwee($value): string
     {
-        $converted = strval(str_replace(',', '', $value) * 100);
-        return $converted;
+        return strval(str_replace(',', '', $value) * 100);
     }
 }
