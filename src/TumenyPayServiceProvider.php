@@ -14,15 +14,27 @@ class TumenyPayServiceProvider extends ServiceProvider
         /*
          * Optional methods to load your package assets
          */
+        $this->mergeConfigFrom(__DIR__ . '/../config/tumeny.php', 'tumeny');
+
         // $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'tumeny-pay');
         // $this->loadViewsFrom(__DIR__.'/../resources/views', 'tumeny-pay');
-        // $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         // $this->loadRoutesFrom(__DIR__.'/routes.php');
 
         if ($this->app->runningInConsole()) {
             $this->publishes([
-                __DIR__.'/../config/config.php' => config_path('tumeny-pay.php'),
+                __DIR__ . '/../config/tumeny.php' => config_path('tumeny.php'),
             ], 'config');
+
+            $this->publishes([
+                __DIR__.'/../database/migrations/create_shengamo_orders_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_tumeny_orders_table.php'),
+                __DIR__.'/../database/migrations/create_shengamo_order_statuses_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_tumeny_order_statuses_table.php'),
+            ], 'migrations');
+
+            // Publishing the DB Seed.
+            $this->publishes([
+                __DIR__.'/../database/seeders/ShengamoOrderStatusesTableSeeder.php' => database_path('seeders/ShengamoOrderStatusesTableSeeder.php'),
+            ], 'seeders');
 
             // Publishing the views.
             /*$this->publishes([
@@ -50,7 +62,7 @@ class TumenyPayServiceProvider extends ServiceProvider
     public function register()
     {
         // Automatically apply the package configuration
-        $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'tumeny-pay');
+        $this->mergeConfigFrom(__DIR__ . '/../config/tumeny.php', 'tumeny');
 
         // Register the main class to use with the facade
         $this->app->singleton('tumeny-pay', function () {

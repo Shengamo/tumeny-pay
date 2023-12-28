@@ -1,0 +1,1 @@
+{"version":1,"defects":{"Test\\TumenyTest::test_new_auth_token_stored_in_cache":4},"times":{"Shengamo\\TumenyPay\\Test\\TumenyTest::test_it_can_get_auth_token":0.004,"Test\\TumenyTest::test_new_auth_token_stored_in_cache":0.123}}
