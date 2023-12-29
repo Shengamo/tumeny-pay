@@ -2,7 +2,6 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/shengamo/tumeny-pay.svg?style=flat-square)](https://packagist.org/packages/shengamo/tumeny-pay)
 [![Total Downloads](https://img.shields.io/packagist/dt/shengamo/tumeny-pay.svg?style=flat-square)](https://packagist.org/packages/shengamo/tumeny-pay)
-![GitHub Actions](https://github.com/shengamo/tumeny-pay/actions/workflows/main.yml/badge.svg)
 
 # TumenyPay Laravel Package
 
@@ -19,7 +18,7 @@ This Laravel package integrates Tumeny Pay as a payment gateway into your Larave
 2. Publish the package migrations:
 
     ```bash
-    php artisan vendor:publish --tag=tumeny-pay-migrations
+    php artisan vendor:publish --tag=Shengamo\TumenyPay\TumenyPayServiceProvider
     ```
 
 3. Add the following environment variables to your `.env` file:
@@ -42,7 +41,7 @@ use Shengamo\TumenyPay\TumenyPay;
 $tumeny = new TumenyPay();
 $tumeny->processPayment('amount', 'plan name or default', 'Zambian mobile number', 'quantity of items', 'description');
 
-// e.g.
+// e.g. request a payment of K100 from the mobile number 0961234567.
 $tumeny->processPayment(100, 'default', '0961234567', 1, 'custom description');
 ```
 ### Setup the verification of payments
