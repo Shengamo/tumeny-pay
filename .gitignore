@@ -17,3 +17,5 @@ build*
 build
 build/*
 *.cache
+vendor
+composer.lock
