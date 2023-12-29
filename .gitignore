@@ -14,3 +14,6 @@ yarn-error.log
 public/.DS_Store
 composer.lock
 build*
+build
+build/*
+*.cache
