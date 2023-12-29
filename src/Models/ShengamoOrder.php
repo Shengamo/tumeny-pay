@@ -40,11 +40,6 @@ class ShengamoOrder extends Model
         return $this->belongsTo(Team::class);
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
     protected function amount(): Attribute
     {
         return Attribute::make(

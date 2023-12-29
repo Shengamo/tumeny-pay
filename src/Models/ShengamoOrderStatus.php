@@ -15,6 +15,6 @@ class ShengamoOrderStatus extends Model
 
     public function orders()
     {
-        return $this->hasMany(Order::class,'status');
+        return $this->hasMany(ShengamoOrder::class,'status');
     }
 }

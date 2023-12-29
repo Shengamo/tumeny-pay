@@ -21,10 +21,6 @@ class TumenyPay
         $this->apiSecret = config('tumeny.secret');
         $this->baseUrl = config('tumeny.base_url');
     }
-    public function generateReference(String $transactionPrefix = 'shengamo_'): string
-    {
-        return $transactionPrefix . '_' . uniqid(time());
-    }
 
     public function getToken() : string|null
     {
@@ -80,25 +76,34 @@ class TumenyPay
             ]
         )->post($this->baseUrl . "v1/payment", $data);
         if($response->status() === 200){
-//            dd($response->body());
             $responseData = json_decode($response->body());
-//dd($responseData->payment->status=="PENDING");
             $status = "failed";
 
             if($responseData->payment->status=="PENDING"){
-//                check status
                 $order = ShengamoOrder::create([
                     'tx_ref'=>$responseData->payment->id,
                     'plan'=>$data['description'],
                     'amount'=>$data['amount'],
                     'status'=>1
                 ]);
-                return $order->id;
+                $status = "Pending";
             }
-
             return $status;
-        }else{
-            return 'skip';
+        }
+    }
+
+    public function verifyPayment(ShengamoOrder $order)
+    {
+        $response = Http::withToken($this->getToken())
+            ->withHeaders(
+                [
+                    'Content-Type'=>'application/json',
+                ]
+            )->get($this->baseUrl . "v1/payment/", $order->tx_ref);
+
+        if($response->status() === 200) {
+            $responseData = json_decode($response->body());
+            return $responseData->payment->status;
         }
     }
 }

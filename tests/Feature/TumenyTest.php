@@ -7,6 +7,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 //use Orchestra\Testbench\TestCase;
+use Shengamo\TumenyPay\Jobs\VerifyPendingOrderPayments;
 use Shengamo\TumenyPay\Models\Order;
 use Shengamo\TumenyPay\Models\ShengamoOrder;
 use Shengamo\TumenyPay\Tests\TestCase;
@@ -90,9 +91,121 @@ class TumenyTest extends TestCase
 
     }
 
-//    public function test_order_status_is_updated()
-//    {
-////        create an order with a status of pending
-////
-//    }
+    public function test_payment_verified_as_successful()
+    {
+        Http::fake([
+            config('tumeny.base_url') . 'token' => Http::response([
+                "token"=> "abcdef123456",
+                "expireAt"=> [
+                    "date"=> Carbon::parse()->addHours(2)->timezone('UTC'),
+                    "timezone_type"=> 3,
+                    "timezone"=> "UTC"
+                ]
+            ], 200)
+        ]);
+
+        Http::fake([
+            config('tumeny.base_url') . 'v1/payment/*' => Http::response([
+                'payment' => [
+                    "id"=> "0005a2ea-06f5-446c-9e5a-51a3eeab93be",
+                    "amount"=> 1,
+                    "status"=> "success",
+                    "message"=> "Successful"
+                ],
+            ], 200)
+        ]);
+
+        ShengamoOrder::create([
+            'tx_ref'=>"0005a2ea-06f5-446c-9e5a-51a3eeab93be",
+            'plan'=>"tumeny",
+            'amount'=>1,
+            'status'=>1
+        ]);
+
+        $very = new VerifyPendingOrderPayments();
+        $very->handle();
+
+        $this->assertEquals(2, ShengamoOrder::first()->status);
+        $this->assertEquals('Success', ShengamoOrder::first()->orderStatus->status);
+    }
+
+    public function test_payment_verified_has_failed()
+    {
+        Http::fake([
+            config('tumeny.base_url') . 'token' => Http::response([
+                "token"=> "abcdef123456",
+                "expireAt"=> [
+                    "date"=> Carbon::parse()->addHours(2)->timezone('UTC'),
+                    "timezone_type"=> 3,
+                    "timezone"=> "UTC"
+                ]
+            ], 200)
+        ]);
+
+        Http::fake([
+            config('tumeny.base_url') . 'v1/payment/*' => Http::response([
+                'payment' => [
+                    "id"=> "0005a2ea-06f5-446c-9e5a-51a3eeab93be",
+                    "amount"=> 1,
+                    "status"=> "failed",
+                    "message"=> "Failed"
+                ],
+            ], 200)
+        ]);
+
+        ShengamoOrder::create([
+            'tx_ref'=>"0005a2ea-06f5-446c-9e5a-51a3eeab93be",
+            'plan'=>"tumeny",
+            'amount'=>1,
+            'status'=>1
+        ]);
+
+        $this->assertEquals('Pending', ShengamoOrder::first()->orderStatus->status);
+
+        $very = new VerifyPendingOrderPayments();
+        $very->handle();
+
+        $this->assertEquals(3, ShengamoOrder::first()->status);
+        $this->assertEquals('Failed', ShengamoOrder::first()->orderStatus->status);
+    }
+
+    public function test_payment_verified_is_still_pending()
+    {
+        Http::fake([
+            config('tumeny.base_url') . 'token' => Http::response([
+                "token"=> "abcdef123456",
+                "expireAt"=> [
+                    "date"=> Carbon::parse()->addHours(2)->timezone('UTC'),
+                    "timezone_type"=> 3,
+                    "timezone"=> "UTC"
+                ]
+            ], 200)
+        ]);
+
+        Http::fake([
+            config('tumeny.base_url') . 'v1/payment/*' => Http::response([
+                'payment' => [
+                    "id"=> "0005a2ea-06f5-446c-9e5a-51a3eeab93be",
+                    "amount"=> 1,
+                    "status"=> "pending",
+                    "message"=> "Pending"
+                ],
+            ], 200)
+        ]);
+
+        ShengamoOrder::create([
+            'tx_ref'=>"0005a2ea-06f5-446c-9e5a-51a3eeab93be",
+            'plan'=>"tumeny",
+            'amount'=>1,
+            'status'=>1
+        ]);
+
+        $this->assertEquals('Pending', ShengamoOrder::first()->orderStatus->status);
+        $very = new VerifyPendingOrderPayments();
+        $very->handle();
+
+        $this->assertEquals(1, ShengamoOrder::first()->status);
+        $this->assertEquals('Pending', ShengamoOrder::first()->orderStatus->status);
+    }
+
 }
