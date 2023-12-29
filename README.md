@@ -77,7 +77,6 @@ If you discover any security related issues, please email mo@shengamo.com instea
 ## Credits
 
 -   [Mo Malenga](https://github.com/shengamo)
--   [All Contributors](../../contributors)
 
 ## License
 
