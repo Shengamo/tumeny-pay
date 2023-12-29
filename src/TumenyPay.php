@@ -49,7 +49,7 @@ class TumenyPay
         return $response;
     }
 
-    public function processPayment($amount, $plan, $mobile, $qty, $description, $orderId, $paymentType='mobile_money', $currency="ZMW")
+    public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType='mobile_money', $currency="ZMW")
     {
         if($paymentType == 'mobile_money'){
             $data = [

@@ -83,7 +83,7 @@ class TumenyTest extends TestCase
         $tumeny = new TumenyPay();
 
         // Execute the method that generates and caches the token
-        $tumeny->processPayment(1, 'default','0968666077',1,'Payment for goods',1);
+        $tumeny->processPayment(1, 'default','0968666077',1,'Payment for goods');
 
 //        Check to see if an order is created
         $this->assertEquals(1, ShengamoOrder::count());
