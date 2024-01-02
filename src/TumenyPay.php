@@ -1,7 +1,8 @@
 <?php
-
 namespace Shengamo\TumenyPay;
 
+use GuzzleHttp\Promise\PromiseInterface;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -13,7 +14,6 @@ class TumenyPay
     private string $apiKey;
     private string $apiSecret;
     private string $baseUrl;
-    // Build your next great package.
 
     function __construct()
     {
@@ -38,18 +38,16 @@ class TumenyPay
         return $token;
     }
 
-    protected function generateToken()
+    protected function generateToken(): PromiseInterface|Response
     {
-        $response = Http::withHeaders([
+        return Http::withHeaders([
             'apiKey'=>$this->apiKey,
             'apiSecret'=>$this->apiSecret,
             'Content-Type' => 'application/json',
         ])->post($this->baseUrl . 'token');
-
-        return $response;
     }
 
-    public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType='mobile_money', $currency="ZMW")
+    public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType='mobile_money', $currency="ZMW"): void
     {
         if($paymentType == 'mobile_money'){
             $data = [
@@ -65,19 +63,8 @@ class TumenyPay
         }
     }
 
-    private function initializePayment($data, $plan)
+    private function initializePayment($data, $plan): void
     {
-        Http::fake([
-            config('tumeny.base_url') . 'v1/payment' => Http::response([
-                'payment' => [
-                    'id' => '0005a2ea-06f5-446c-9e5a-51a3eeab93be',
-                    'amount' => 1,
-                    'status' => "PENDING",
-                    'message' => "PENDING",
-                ],
-            ], 200)
-        ]);
-
         $response = Http::withToken($this->getToken())
         ->withHeaders(
             [
@@ -99,7 +86,6 @@ class TumenyPay
                 ]);
                 $status = "Pending";
             }
-            return $status;
         }
     }
 

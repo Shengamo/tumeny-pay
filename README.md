@@ -92,6 +92,15 @@ Add the events and listener in your App\Providers\EventServiceProvider like the 
     ];
 ```
 
+
+### Manually firing the verification
+
+In order to manually verify all the pending transactions in your shengamo_orders table, you can ran the artisan command.
+
+```bash
+php artisan tumeny:verify
+```
+
 ### Testing
 
 ```bash
