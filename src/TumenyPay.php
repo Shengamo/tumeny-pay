@@ -49,21 +49,23 @@ class TumenyPay
     public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType='mobile_money', $currency="ZMW")
     {
         if($paymentType == 'mobile_money'){
+            $name = explode(' ', auth()->user()->name);
             $data = [
                 'description' => $description,
-                'customerFirstName' => 'firstName',
-                'customerLastName' => 'lastName',
+                'customerFirstName' => $name[0],
+                'customerLastName' => $name[1] ?? "Name",
                 'email' => 'email',
                 'phoneNumber' => $mobile,
                 'amount' => $amount*$qty,
             ];
 
-            return $this->initializePayment($data, $plan);
+            $this->initializePayment($data, $plan);
         }
     }
 
     private function initializePayment($data, $plan): array
     {
+
         try {
             $response = Http::withToken($this->getToken())
                 ->withHeaders(['Content-Type' => 'application/json'])
@@ -72,7 +74,7 @@ class TumenyPay
             if ($response->successful()) {
                 $responseData = json_decode($response->body());
 
-                if ($responseData->payment->status == "PENDING") {
+//                if ($responseData->payment->status == "PENDING") {
                     ShengamoOrder::create([
                         'team_id' => auth()->user()->currentTeam->id,
                         'tx_ref' => $responseData->payment->id,
@@ -89,15 +91,15 @@ class TumenyPay
                     ]);
 
                     return ['status' => 'Pending', 'message' => 'Transaction is pending. Please approve on your mobile phone.'];
-                }
-
-                // Handle other response statuses or errors if needed
-                Log::error('Payment initialization failed. Unexpected status received.', [
-                    'status' => $responseData->payment->status,
-                    'response' => $response->body(),
-                ]);
-
-                return ['status' => 'failed', 'message' => 'Payment initialization failed. Unexpected status received.'];
+//                }
+//
+//                // Handle other response statuses or errors if needed
+//                Log::error('Payment initialization failed. Unexpected status received.', [
+//                    'status' => $responseData->payment->status,
+//                    'response' => $response->body(),
+//                ]);
+//
+//                return ['status' => 'failed', 'message' => 'Payment initialization failed. Unexpected status received.'];
             }
 
             // Handle other response statuses or errors if needed
