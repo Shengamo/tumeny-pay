@@ -48,8 +48,8 @@ class TumenyPay
 
     public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType='mobile_money', $currency="ZMW")
     {
-        if($paymentType == 'mobile_money'){
-            $name = explode(' ', auth()->user()->name);
+//        if($paymentType == 'mobile_money'){
+            $name = explode(' ', auth()->user()->name ?? 'Fake User');
             $data = [
                 'description' => $description,
                 'customerFirstName' => $name[0],
@@ -60,17 +60,15 @@ class TumenyPay
             ];
 
             $this->initializePayment($data, $plan);
-        }
+//        }
     }
 
     private function initializePayment($data, $plan): array
     {
-
         try {
             $response = Http::withToken($this->getToken())
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->post($this->baseUrl . "v1/payment", $data);
-
             if ($response->successful()) {
                 $responseData = json_decode($response->body());
 
@@ -92,7 +90,7 @@ class TumenyPay
 
                     return ['status' => 'Pending', 'message' => 'Transaction is pending. Please approve on your mobile phone.'];
 //                }
-//
+
 //                // Handle other response statuses or errors if needed
 //                Log::error('Payment initialization failed. Unexpected status received.', [
 //                    'status' => $responseData->payment->status,
