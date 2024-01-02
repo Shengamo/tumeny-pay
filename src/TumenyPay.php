@@ -6,6 +6,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Shengamo\TumenyPay\Models\ShengamoOrder;
 
 class TumenyPay
@@ -24,7 +25,6 @@ class TumenyPay
 
     public function getToken() : string|null
     {
-        $token = null;
         if (!Cache::has('tumeny_token')) {
             $response = $this->generateToken();
             if($response->status() == 200){
@@ -32,10 +32,9 @@ class TumenyPay
                 $time = Carbon::parse($body->expireAt->date)->timezone('Africa/Harare');
 
                 Cache::put('tumeny_token', $body->token, $time);
-                $token = Cache::get('tumeny_token');
             }
         }
-        return $token;
+        return Cache::get('tumeny_token');
     }
 
     protected function generateToken(): PromiseInterface|Response
@@ -47,7 +46,7 @@ class TumenyPay
         ])->post($this->baseUrl . 'token');
     }
 
-    public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType='mobile_money', $currency="ZMW"): void
+    public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType='mobile_money', $currency="ZMW")
     {
         if($paymentType == 'mobile_money'){
             $data = [
@@ -59,44 +58,71 @@ class TumenyPay
                 'amount' => $amount*$qty,
             ];
 
-            $this->initializePayment($data, $plan);
+            return $this->initializePayment($data, $plan);
         }
     }
 
-    private function initializePayment($data, $plan): void
+    private function initializePayment($data, $plan): array
     {
-        $response = Http::withToken($this->getToken())
-        ->withHeaders(
-            [
-                'Content-Type'=>'application/json',
-            ]
-        )->post($this->baseUrl . "v1/payment", $data);
+        try {
+            $response = Http::withToken($this->getToken())
+                ->withHeaders(['Content-Type' => 'application/json'])
+                ->post($this->baseUrl . "v1/payment", $data);
 
-        if($response->status() === 200){
-            $responseData = json_decode($response->body());
-            $status = "failed";
+            if ($response->successful()) {
+                $responseData = json_decode($response->body());
 
-            if($responseData->payment->status=="PENDING"){
-                ShengamoOrder::create([
-                    'team_id'=>auth()->user()->currentTeam->id,
-                    'tx_ref'=>$responseData->payment->id,
-                    'plan'=>$plan,
-                    'amount'=>$data['amount'],
-                    'status'=>1
+                if ($responseData->payment->status == "PENDING") {
+                    ShengamoOrder::create([
+                        'team_id' => auth()->user()->currentTeam->id,
+                        'tx_ref' => $responseData->payment->id,
+                        'plan' => $plan,
+                        'amount' => $data['amount'],
+                        'status' => 1,
+                    ]);
+
+                    Log::info('Payment initialized successfully. Status: PENDING', [
+                        'team_id' => auth()->user()->currentTeam->id,
+                        'tx_ref' => $responseData->payment->id,
+                        'plan' => $plan,
+                        'amount' => $data['amount'],
+                    ]);
+
+                    return ['status' => 'Pending', 'message' => 'Transaction is pending. Please approve on your mobile phone.'];
+                }
+
+                // Handle other response statuses or errors if needed
+                Log::error('Payment initialization failed. Unexpected status received.', [
+                    'status' => $responseData->payment->status,
+                    'response' => $response->body(),
                 ]);
-                $status = "Pending";
+
+                return ['status' => 'failed', 'message' => 'Payment initialization failed. Unexpected status received.'];
             }
+
+            // Handle other response statuses or errors if needed
+            Log::error('Payment initialization failed. HTTP request unsuccessful.', [
+                'status_code' => $response->status(),
+                'response' => $response->body(),
+            ]);
+
+            return ['status' => 'failed', 'message' => 'Payment initialization failed. HTTP request unsuccessful.'];
+        } catch (\Exception $exception) {
+            // Log any unexpected exceptions
+            Log::error('Exception occurred during payment initialization.', [
+                'exception_message' => $exception->getMessage(),
+                'exception_trace' => $exception->getTrace(),
+            ]);
+
+            return ['status' => 'failed', 'message' => 'An unexpected error occurred during payment initialization.'];
         }
     }
+
 
     public function verifyPayment(ShengamoOrder $order)
     {
         $response = Http::withToken($this->getToken())
-            ->withHeaders(
-                [
-                    'Content-Type'=>'application/json',
-                ]
-            )->get($this->baseUrl . "v1/payment/", $order->tx_ref);
+            ->get($this->baseUrl . "v1/payment/".$order->tx_ref);
 
         if($response->status() === 200) {
             $responseData = json_decode($response->body());

@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/shengamo/tumeny-pay.svg?style=flat-square)](https://packagist.org/packages/shengamo/tumeny-pay)
 [![Total Downloads](https://img.shields.io/packagist/dt/shengamo/tumeny-pay.svg?style=flat-square)](https://packagist.org/packages/shengamo/tumeny-pay)
 
-# TumenyPay Laravel Package
+# A Laravel Package for integrating with Tumeny Pay
 
 This Laravel package integrates Tumeny Pay as a payment gateway into your Laravel application.
 

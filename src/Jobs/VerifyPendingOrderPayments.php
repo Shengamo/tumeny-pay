@@ -46,7 +46,7 @@ class VerifyPendingOrderPayments implements ShouldQueue
             if ($paymentStatus === 'success') {
                 $order->update(['status' => 2]); // Payment successful
             }else{
-                $order->update(['status' => 3]); // Payment failed
+//                $order->update(['status' => 3]); // Payment failed
             }
         }
     }
