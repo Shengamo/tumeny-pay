@@ -54,7 +54,44 @@ $schedule->job(new VerifyPendingOrderPayments())->everyMinute();
 
 ```
 
-You can now access the completed payment in the ShengamoOrder table in your DB. If you have a subscription app, you could add an observer for the ShengamoOrder Model and activate your subscription if ShengamoOrder has a status of 2 (Success).
+### Events & Listeners
+Events are fired when ShengamoOrder is generated and also when the ShengamoOrder has been updated. You could register these events in the EventServiceProvider.
+If you would like to handle an action, for example, if you would like to add a subscription if the order is successful, you could create an event listener that listens to the ShengamoOrderCreated Event.
+
+For example, after creating a AddSubscriptionListener Listener class, the code below would handle subscription if order is successful.
+
+```php
+class AddSubscriptionListener
+{
+    public function __construct()
+    {
+        //
+    }
+
+    public function handle(ShengamoOrderUpdated $event): void
+    {;
+        //If the order status is successful or 2
+        if($event->shengamoOrder->status === 2)
+        {
+         // Add the subscription here
+        }
+    }
+}
+
+```
+
+Add the events and listener in your App\Providers\EventServiceProvider like the example below.
+
+```php
+    protected $listen = [
+        
+        ShengamoOrderUpdated::class => [
+            AddSubscriptionListener::class
+        ],
+
+    ];
+```
+
 ### Testing
 
 ```bash

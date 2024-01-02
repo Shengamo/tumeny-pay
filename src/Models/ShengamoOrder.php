@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\Jetstream\Events\TeamCreated;
+use Laravel\Jetstream\Events\TeamDeleted;
+use Laravel\Jetstream\Events\TeamUpdated;
+use Shengamo\TumenyPay\Events\ShengamoOrderCreated;
+use Shengamo\TumenyPay\Events\ShengamoOrderUpdated;
 use Shengamo\TumenyPay\Services\FormatterService;
 
 class ShengamoOrder extends Model
@@ -25,9 +30,9 @@ class ShengamoOrder extends Model
         'status',
     ];
 
-
-    protected $casts = [
-//        'plan' => PlanEnum::class,
+    protected $dispatchesEvents = [
+        'created' => ShengamoOrderCreated::class,
+        'updated' => ShengamoOrderUpdated::class,
     ];
 
     public function orderStatus()

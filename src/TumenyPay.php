@@ -10,9 +10,9 @@ use Shengamo\TumenyPay\Models\ShengamoOrder;
 class TumenyPay
 {
 
-    private $apiKey;
-    private $apiSecret;
-    private $baseUrl;
+    private string $apiKey;
+    private string $apiSecret;
+    private string $baseUrl;
     // Build your next great package.
 
     function __construct()
@@ -61,28 +61,39 @@ class TumenyPay
                 'amount' => $amount*$qty,
             ];
 
-            $this->initializePayment($data);
+            $this->initializePayment($data, $plan);
         }
-
-//        return $response->status();
     }
 
-    private function initializePayment($data)
+    private function initializePayment($data, $plan)
     {
+        Http::fake([
+            config('tumeny.base_url') . 'v1/payment' => Http::response([
+                'payment' => [
+                    'id' => '0005a2ea-06f5-446c-9e5a-51a3eeab93be',
+                    'amount' => 1,
+                    'status' => "PENDING",
+                    'message' => "PENDING",
+                ],
+            ], 200)
+        ]);
+
         $response = Http::withToken($this->getToken())
         ->withHeaders(
             [
                 'Content-Type'=>'application/json',
             ]
         )->post($this->baseUrl . "v1/payment", $data);
+
         if($response->status() === 200){
             $responseData = json_decode($response->body());
             $status = "failed";
 
             if($responseData->payment->status=="PENDING"){
-                $order = ShengamoOrder::create([
+                ShengamoOrder::create([
+                    'team_id'=>auth()->user()->currentTeam->id,
                     'tx_ref'=>$responseData->payment->id,
-                    'plan'=>$data['description'],
+                    'plan'=>$plan,
                     'amount'=>$data['amount'],
                     'status'=>1
                 ]);
