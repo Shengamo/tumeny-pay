@@ -101,11 +101,8 @@ class TumenyPay
                     'status_code' => $response->status(),
                     'response' => $response->body(),
                 ]);
+                return null;
             }
-
-            Log::info('Token from Tumeny generated.', [
-                'token' => Cache::get('tumeny_token')
-            ]);
         }
         return Cache::get('tumeny_token');
     }
