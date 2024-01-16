@@ -56,32 +56,11 @@ class TumenyPayServiceProvider extends ServiceProvider
             ], 'migrations');
         }
 
-//        if (empty(glob(database_path('migrations/*_create_feature_plan_table.php')))) {
-//            $this->publishes([
-//                __DIR__.'/../database/migrations/create_feature_plan_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_feature_plan_table.php'),
-//            ], 'migrations');
-//        }
-
-//        if (empty(glob(database_path('migrations/*_create_feature_table.php')))) {
-//            $this->publishes([
-//                __DIR__.'/../database/migrations/create_features_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_feature_table.php'),
-//            ], 'migrations');
-//        }
-
-//        if (empty(glob(database_path('migrations/*_create_plans_table.php')))) {
-//            $this->publishes([
-//                __DIR__.'/../database/migrations/create_plans_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_plan_table.php'),
-//            ], 'migrations');
-//        }
-        // Publishing assets.
-        /*$this->publishes([
-            __DIR__.'/../resources/assets' => public_path('vendor/shengamo'),
-        ], 'billing.assets');*/
-
-        // Publishing the translation files.
-        /*$this->publishes([
-            __DIR__.'/../resources/lang' => resource_path('lang/vendor/shengamo'),
-        ], 'billing.lang');*/
+        if (empty(glob(database_path('migrations/*_create_team_subscriptions_table.php')))) {
+            $this->publishes([
+                __DIR__.'/../database/migrations/create_team_subscriptions_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_team_subscriptions_table.php'),
+            ], 'migrations');
+        }
 
         // Registering package commands.
          $this->commands([
