@@ -90,7 +90,7 @@ class TumenyPay
             $response = $this->generateToken();
             if ($response->status() == 200) {
                 $body = json_decode($response->body());
-                $time = Carbon::parse($body->expireAt->date)->timezone('Africa/Harare');
+                $time = Carbon::parse($body->expireAt->date)->addHours(2);
                 Cache::put('tumeny_token', $body->token, $time);
 
                 Log::info('Token from Tumeny generated.', [
