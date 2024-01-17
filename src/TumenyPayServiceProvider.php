@@ -56,11 +56,11 @@ class TumenyPayServiceProvider extends ServiceProvider
             ], 'migrations');
         }
 
-        if (empty(glob(database_path('migrations/*_create_team_subscriptions_table.php')))) {
-            $this->publishes([
-                __DIR__.'/../database/migrations/create_team_subscriptions_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_team_subscriptions_table.php'),
-            ], 'migrations');
-        }
+//        if (empty(glob(database_path('migrations/*_create_team_subscriptions_table.php')))) {
+//            $this->publishes([
+//                __DIR__.'/../database/migrations/create_team_subscriptions_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_team_subscriptions_table.php'),
+//            ], 'migrations');
+//        }
 
         // Registering package commands.
          $this->commands([
