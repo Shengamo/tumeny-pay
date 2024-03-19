@@ -3,7 +3,6 @@
 namespace Shengamo\TumenyPay;
 
 use Exception;
-use GuzzleHttp\Promise\PromiseInterface;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -13,16 +12,16 @@ use Shengamo\TumenyPay\Models\ShengamoOrder;
 
 class TumenyPay
 {
-
     private string $apiKey;
     private string $apiSecret;
     private string $baseUrl;
+    private const MAX_RETRY_ATTEMPTS = 3;
 
-    function __construct()
+    public function __construct()
     {
-        $this->apiKey = config('tumeny.key');
-        $this->apiSecret = config('tumeny.secret');
-        $this->baseUrl = config('tumeny.base_url');
+        $this->apiKey = $this->getConfig('key');
+        $this->apiSecret = $this->getConfig('secret');
+        $this->baseUrl = $this->getConfig('base_url');
     }
 
     public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType = 'mobile_money', $currency = "ZMW")
@@ -40,34 +39,26 @@ class TumenyPay
         $this->initializePayment($data, $plan);
     }
 
-    private function initializePayment($data, $plan): array
+    private function initializePayment($data, $plan, $retryCount = 0): array
     {
         try {
             $response = Http::withToken($this->getToken())
                 ->withHeaders(['Content-Type' => 'application/json'])
                 ->post($this->baseUrl . "v1/payment", $data);
+
             if ($response->successful()) {
-                $responseData = json_decode($response->body());
-
-                ShengamoOrder::create([
-                    'team_id' => auth()->user()->currentTeam->id,
-                    'tx_ref' => $responseData->payment->id,
-                    'plan' => $plan,
-                    'amount' => $data['amount'],
-                    'status' => 1,
-                ]);
-
-                Log::info('Payment initialized successfully. Status: PENDING', [
-                    'team_id' => auth()->user()->currentTeam->id,
-                    'tx_ref' => $responseData->payment->id,
-                    'plan' => $plan,
-                    'amount' => $data['amount'],
-                ]);
-
                 return ['status' => 'Pending', 'message' => 'Transaction is pending. Please approve on your mobile phone.'];
             }
 
-            // Handle other response statuses or errors if needed
+            if ($response->status() === 401 && $retryCount < self::MAX_RETRY_ATTEMPTS) {
+                Cache::forget('tumeny_token');
+                Log::error('Unauthorized access, the token is invalid, regenerate token.', [
+                    'status_code' => $response->status(),
+                    'response' => $response->body(),
+                ]);
+                return $this->initializePayment($data, $plan, $retryCount + 1);
+            }
+
             Log::error('Payment initialization failed. HTTP request unsuccessful.', [
                 'status_code' => $response->status(),
                 'response' => $response->body(),
@@ -79,41 +70,8 @@ class TumenyPay
                 'exception_message' => $exception->getMessage(),
                 'exception_trace' => $exception->getTrace(),
             ]);
-
             return ['status' => 'failed', 'message' => 'An unexpected error occurred during payment initialization.'];
         }
-    }
-
-    public function getToken(): string|null
-    {
-        if (!Cache::has('tumeny_token')) {
-            $response = $this->generateToken();
-            if ($response->status() == 200) {
-                $body = json_decode($response->body());
-                $time = Carbon::parse($body->expireAt->date)->addHours(2);
-                Cache::put('tumeny_token', $body->token, $time);
-
-                Log::info('Token from Tumeny generated.', [
-                    'token' => Cache::get('tumeny_token')
-                ]);
-            } else {
-                Log::error('Failed to generate a Token from Tumeny.', [
-                    'status_code' => $response->status(),
-                    'response' => $response->body(),
-                ]);
-                return null;
-            }
-        }
-        return Cache::get('tumeny_token');
-    }
-
-    protected function generateToken(): PromiseInterface|Response
-    {
-        return Http::withHeaders([
-            'apiKey' => $this->apiKey,
-            'apiSecret' => $this->apiSecret,
-            'Content-Type' => 'application/json',
-        ])->post($this->baseUrl . 'token');
     }
 
     public function verifyPayment(ShengamoOrder $order)
@@ -126,9 +84,37 @@ class TumenyPay
             return $responseData->payment->status;
         }
 
-        if ($response->status() === 401) {
-            return 'pending';
+        return $response->status() === 401 ? 'pending' : 'failed';
+    }
+
+    public function getToken(): string|null
+    {
+        if (!Cache::has('tumeny_token')) {
+            $response = Http::withHeaders([
+                'apiKey' => $this->apiKey,
+                'apiSecret' => $this->apiSecret,
+                'Content-Type' => 'application/json',
+            ])->post($this->baseUrl . 'token');
+
+            if ($response->status() === 200) {
+                $body = json_decode($response->body());
+                $time = Carbon::parse($body->expireAt->date)->addMinutes(15);
+                Cache::put('tumeny_token', $body->token, $time);
+
+                Log::info('Token from Tumeny generated.', ['token' => Cache::get('tumeny_token')]);
+            } else {
+                Log::error('Failed to generate a Token from Tumeny.', [
+                    'status_code' => $response->status(),
+                    'response' => $response->body(),
+                ]);
+                return null;
+            }
         }
-        return 'failed';
+        return Cache::get('tumeny_token');
+    }
+
+    private function getConfig(string $key): string
+    {
+        return config('tumeny.' . $key);
     }
 }
