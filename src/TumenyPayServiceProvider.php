@@ -28,20 +28,6 @@ class TumenyPayServiceProvider extends ServiceProvider
         }
     }
 
-    /**
-     * Register the application services.
-     */
-    public function register()
-    {
-        // Automatically apply the package configuration
-        $this->mergeConfigFrom(__DIR__ . '/../config/tumeny.php', 'tumeny');
-
-        // Register the main class to use with the facade
-        $this->app->singleton('tumeny-pay', function () {
-            return new TumenyPay;
-        });
-    }
-
     protected function bootForConsole(): void
     {
         // Publishing the configuration file.
@@ -56,16 +42,30 @@ class TumenyPayServiceProvider extends ServiceProvider
             ], 'migrations');
         }
 
-//        if (empty(glob(database_path('migrations/*_create_team_subscriptions_table.php')))) {
-//            $this->publishes([
-//                __DIR__.'/../database/migrations/create_team_subscriptions_table.php' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_team_subscriptions_table.php'),
-//            ], 'migrations');
-//        }
+        if (empty(glob(database_path('migrations/*_create_team_subscriptions_table.php')))) {
+            $this->publishes([
+                __DIR__.'/../database/migrations/create_team_subscriptions_table.php.stub' => database_path('migrations/'.date('Y_m_d_His', time()).'_create_team_subscriptions_table.php'),
+            ], 'migrations');
+        }
 
         // Registering package commands.
          $this->commands([
              VerifyPayment::class,
          ]);
+    }
+
+    /**
+     * Register the application services.
+     */
+    public function register()
+    {
+        // Automatically apply the package configuration
+        $this->mergeConfigFrom(__DIR__ . '/../config/tumeny.php', 'tumeny');
+
+        // Register the main class to use with the facade
+        $this->app->singleton('tumeny-pay', function () {
+            return new TumenyPay;
+        });
     }
 
 }
