@@ -3,7 +3,6 @@
 namespace Shengamo\TumenyPay;
 
 use Exception;
-use Illuminate\Http\Client\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -12,16 +11,21 @@ use Shengamo\TumenyPay\Models\ShengamoOrder;
 
 class TumenyPay
 {
+    private const MAX_RETRY_ATTEMPTS = 3;
     private string $apiKey;
     private string $apiSecret;
     private string $baseUrl;
-    private const MAX_RETRY_ATTEMPTS = 3;
 
     public function __construct()
     {
         $this->apiKey = $this->getConfig('key');
         $this->apiSecret = $this->getConfig('secret');
         $this->baseUrl = $this->getConfig('base_url');
+    }
+
+    private function getConfig(string $key): string
+    {
+        return config('tumeny.' . $key);
     }
 
     public function processPayment($amount, $plan, $mobile, $qty, $description, $paymentType = 'mobile_money', $currency = "ZMW")
@@ -47,6 +51,24 @@ class TumenyPay
                 ->post($this->baseUrl . "v1/payment", $data);
 
             if ($response->successful()) {
+
+                $responseData = json_decode($response->body());
+
+                ShengamoOrder::create([
+                    'team_id' => auth()->user()->currentTeam->id,
+                    'tx_ref' => $responseData->payment->id,
+                    'plan' => $plan,
+                    'amount' => $data['amount'],
+                    'status' => 1,
+                ]);
+
+                Log::info('Payment initialized successfully. Status: PENDING', [
+                    'team_id' => auth()->user()->currentTeam->id,
+                    'tx_ref' => $responseData->payment->id,
+                    'plan' => $plan,
+                    'amount' => $data['amount'],
+                ]);
+
                 return ['status' => 'Pending', 'message' => 'Transaction is pending. Please approve on your mobile phone.'];
             }
 
@@ -72,19 +94,6 @@ class TumenyPay
             ]);
             return ['status' => 'failed', 'message' => 'An unexpected error occurred during payment initialization.'];
         }
-    }
-
-    public function verifyPayment(ShengamoOrder $order)
-    {
-        $response = Http::withToken($this->getToken())
-            ->get($this->baseUrl . "v1/payment/" . $order->tx_ref);
-
-        if ($response->status() === 200) {
-            $responseData = json_decode($response->body());
-            return $responseData->payment->status;
-        }
-
-        return $response->status() === 401 ? 'pending' : 'failed';
     }
 
     public function getToken(): string|null
@@ -113,8 +122,16 @@ class TumenyPay
         return Cache::get('tumeny_token');
     }
 
-    private function getConfig(string $key): string
+    public function verifyPayment(ShengamoOrder $order)
     {
-        return config('tumeny.' . $key);
+        $response = Http::withToken($this->getToken())
+            ->get($this->baseUrl . "v1/payment/" . $order->tx_ref);
+
+        if ($response->status() === 200) {
+            $responseData = json_decode($response->body());
+            return $responseData->payment->status;
+        }
+
+        return $response->status() === 401 ? 'pending' : 'failed';
     }
 }
