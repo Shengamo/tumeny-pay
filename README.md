@@ -3,7 +3,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/shengamo/tumeny-pay.svg?style=flat-square)](https://packagist.org/packages/shengamo/tumeny-pay)
 [![Total Downloads](https://img.shields.io/packagist/dt/shengamo/tumeny-pay.svg?style=flat-square)](https://packagist.org/packages/shengamo/tumeny-pay)
 
-# A Laravel Package for integrating with Tumeny Pay
+# A Laravel Package for integrating with Tumeny Pay.
 
 This Laravel package integrates Tumeny Pay as a payment gateway into your Laravel application.
 
@@ -20,6 +20,13 @@ This Laravel package integrates Tumeny Pay as a payment gateway into your Larave
     ```bash
     php artisan vendor:publish --tag=Shengamo\TumenyPay\TumenyPayServiceProvider
     ```
+   The package creates migrations for the shengamo_orders, shengamo_order_statuses and also the team_subscriptions (if
+   it does not already exist). The statuses that are create are:
+
+    - Pending - status 1
+    - Success - status 2
+    - Failed - status 3
+
 
 3. Add the following environment variables to your `.env` file:
 
@@ -29,11 +36,14 @@ This Laravel package integrates Tumeny Pay as a payment gateway into your Larave
     TUMENY_BASE_URL=https://tumeny.herokuapp.com/api/
     ```
 
+*You can find your key and secret from your tumeny account. You need an active account an access to the API Key in order
+to use this package.*
+
 ## Usage
 
 ### Payment Request
 
-To initiate a payment request, you can use the `processPayment` method provided by the `TumenyPay` class.
+You can initiate a payment request using the `processPayment` method provided by the TumenyPay class.
 
 ```php
 use Shengamo\TumenyPay\TumenyPay;
@@ -44,8 +54,11 @@ $tumeny->processPayment('amount', 'plan name or default', 'Zambian mobile number
 // e.g. request a payment of K100 from the mobile number 0961234567.
 $tumeny->processPayment(100, 'default', '0961234567', 1, 'custom description');
 ```
+
 ### Setup the verification of payments
-To automatically verify pending order payments, add the following line to the schedule function in your App\Console\Kernel.php file:
+
+To automatically verify pending order payments, add the following line to the schedule function in your
+App\Console\Kernel.php file:
 
 ```php
 use Shengamo\TumenyPay\Jobs\VerifyPendingOrderPayments;
@@ -54,11 +67,18 @@ $schedule->job(new VerifyPendingOrderPayments())->everyMinute();
 
 ```
 
-### Events & Listeners
-Events are fired when ShengamoOrder is generated and also when the ShengamoOrder has been updated. You could register these events in the EventServiceProvider.
-If you would like to handle an action, for example, if you would like to add a subscription if the order is successful, you could create an event listener that listens to the ShengamoOrderCreated Event.
+The schedule will check the `shengamo_orders` table for all orders with a status of `pending (1)` and send a request to
+the Tumeny API every minute. If there are no pending transactions, no request will be sent to the Tumeny API.
 
-For example, after creating a AddSubscriptionListener Listener class, the code below would handle subscription if order is successful.
+### Events & Listeners
+
+Events are fired when ShengamoOrder is generated and also when the ShengamoOrder has been updated. You could register
+these events in the EventServiceProvider.
+If you would like to handle an action, for example, if you would like to add a subscription if the order is successful,
+you could create an event listener that listens to the ShengamoOrderCreated Event.
+
+For example, after creating a AddSubscriptionListener Listener class, the code below would handle subscription if order
+is successful.
 
 ```php
 class AddSubscriptionListener
@@ -92,7 +112,6 @@ Add the events and listener in your App\Providers\EventServiceProvider like the 
     ];
 ```
 
-
 ### Manually firing the verification
 
 In order to manually verify all the pending transactions in your shengamo_orders table, you can ran the artisan command.
@@ -121,7 +140,7 @@ If you discover any security related issues, please email mo@shengamo.com instea
 
 ## Credits
 
--   [Mo Malenga](https://github.com/shengamo)
+- [Mo Malenga](https://github.com/shengamo)
 
 ## License
 
