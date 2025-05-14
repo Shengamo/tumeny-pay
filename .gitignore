@@ -19,3 +19,5 @@ build/*
 *.cache
 vendor
 composer.lock
+workbench/app/.DS_Store
+*.DS_Store

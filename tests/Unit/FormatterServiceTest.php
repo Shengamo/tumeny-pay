@@ -6,8 +6,8 @@ use PHPUnit\Framework\TestCase;
 
 class FormatterServiceTest extends TestCase
 {
-    /** @test */
-    public function it_can_convert_to_k()
+
+    public function test_it_can_convert_to_k()
     {
         // Test when $n is less than 1000
         $result = FormatterService::convertToK(500);
@@ -20,8 +20,7 @@ class FormatterServiceTest extends TestCase
         // Add more test cases as needed
     }
 
-    /** @test */
-    public function it_can_convert_ngwee_to_kwacha()
+    public function test_it_can_convert_ngwee_to_kwacha()
     {
         $result = FormatterService::ngweeToKwacha(500);
         $this->assertEquals('5.00', $result);
@@ -29,8 +28,7 @@ class FormatterServiceTest extends TestCase
         // Add more test cases as needed
     }
 
-    /** @test */
-    public function it_can_convert_kwacha_to_ngwee()
+    public function test_it_can_convert_kwacha_to_ngwee()
     {
         $result = FormatterService::kwachaToNgwee('5.00');
         $this->assertEquals('500', $result);

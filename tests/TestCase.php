@@ -1,8 +1,7 @@
 <?php
 namespace Shengamo\TumenyPay\Tests;
 
-use App\Models\Team;
-use App\Models\User;
+use Illuminate\Support\Facades\Schema;
 use Shengamo\TumenyPay\TumenyPayServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
@@ -10,6 +9,8 @@ class TestCase extends \Orchestra\Testbench\TestCase
     public function setUp(): void
     {
         parent::setUp();
+
+        $this->setUpDatabase();
     }
 
     protected function getPackageProviders($app)
@@ -17,6 +18,36 @@ class TestCase extends \Orchestra\Testbench\TestCase
         return [
             TumenyPayServiceProvider::class,
         ];
+    }
+
+    protected function setUpDatabase()
+    {
+        // Create users table
+        Schema::create('users', function ($table) {
+            $table->id();
+            $table->string('name');
+            $table->string('email')->unique();
+            $table->timestamp('email_verified_at')->nullable();
+            $table->string('password');
+            $table->rememberToken();
+            $table->text('two_factor_secret')->nullable();
+            $table->text('two_factor_recovery_codes')->nullable();
+            $table->string('profile_photo_path', 2048)->nullable();
+            $table->foreignId('current_team_id')->nullable();
+            $table->timestamps();
+        });
+
+        // Create teams table
+        Schema::create('teams', function ($table) {
+            $table->id();
+            $table->foreignId('user_id');
+            $table->string('name');
+            $table->boolean('personal_team');
+            $table->timestamps();
+        });
+
+        // Include migrations from your package
+        $this->loadMigrationsFrom(__DIR__ . '/../database/migrations');
     }
 
     protected function getEnvironmentSetUp($app)

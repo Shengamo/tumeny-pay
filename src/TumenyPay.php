@@ -107,10 +107,36 @@ class TumenyPay
 
             if ($response->status() === 200) {
                 $body = json_decode($response->body());
-                $time = Carbon::parse($body->expireAt->date)->addMinutes(15);
-                Cache::put('tumeny_token', $body->token, $time);
 
-                Log::info('Token from Tumeny generated.', ['token' => Cache::get('tumeny_token')]);
+                // Parse the expiration time as UTC since that's what the API provides
+                $expireTimeUtc = Carbon::parse($body->expireAt->date, 'UTC');
+
+                // Get the current time in UTC for a proper comparison
+                $nowUtc = now()->setTimezone('UTC');
+
+                // Calculate the TTL with a safety buffer, ensuring a minimum TTL
+                $ttl = max(3000, $expireTimeUtc->diffInSeconds($nowUtc) - 900);
+
+                // Log with timezone information for debugging
+                Log::info('Token expiration details', [
+                    'api_expiry_time_utc' => $body->expireAt->date,
+                    'parsed_expiry_utc' => $expireTimeUtc->toDateTimeString(),
+                    'now_utc' => $nowUtc->toDateTimeString(),
+                    'now_app_timezone' => now()->toDateTimeString(),
+                    'app_timezone' => config('app.timezone'),
+                    'calculated_ttl' => $ttl
+                ]);
+
+                // Store token in cache with calculated TTL
+                Cache::put('tumeny_token', $body->token, $ttl);
+
+                Log::info('Token generated and cached', [
+                    'token' => $body->token,
+                    'ttl_seconds' => $ttl,
+                    'cached_token' => Cache::get('tumeny_token')
+                ]);
+
+                return $body->token;
             } else {
                 Log::error('Failed to generate a Token from Tumeny.', [
                     'status_code' => $response->status(),
