@@ -131,9 +131,7 @@ class TumenyPay
                 Cache::put('tumeny_token', $body->token, $ttl);
 
                 Log::info('Token generated and cached', [
-                    'token' => $body->token,
                     'ttl_seconds' => $ttl,
-                    'cached_token' => Cache::get('tumeny_token')
                 ]);
 
                 return $body->token;

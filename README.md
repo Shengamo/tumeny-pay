@@ -1,4 +1,4 @@
-# Very short description of the package
+# Tumeny Pay
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/shengamo/tumeny-pay.svg?style=flat-square)](https://packagist.org/packages/shengamo/tumeny-pay)
 [![Total Downloads](https://img.shields.io/packagist/dt/shengamo/tumeny-pay.svg?style=flat-square)](https://packagist.org/packages/shengamo/tumeny-pay)
@@ -6,6 +6,25 @@
 # A Laravel Package for integrating with Tumeny Pay.
 
 This Laravel package integrates Tumeny Pay as a payment gateway into your Laravel application.
+
+## Version Compatibility
+
+| Laravel Version | Package Version |
+|-----------------|-----------------|
+| Laravel 11.x    | 2.x             |
+| Laravel 10.x    | 1.x             |
+| Laravel 9.x     | 1.x             |
+
+> **Important:** For Laravel 11 applications, you must use version 2.0 or above of this package due to changes in Laravel's caching implementation. For Laravel 10 and below, use version 1.x.
+
+To install a specific version:
+```bash
+# For Laravel 11
+composer require shengamo/tumeny-pay:^2.0
+
+# For Laravel 10 and below
+composer require shengamo/tumeny-pay:^1.0
+```
 
 ## Installation
 
@@ -145,4 +164,3 @@ If you discover any security related issues, please email mo@shengamo.com instea
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
