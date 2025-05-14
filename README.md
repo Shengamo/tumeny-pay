@@ -11,7 +11,7 @@ This Laravel package integrates Tumeny Pay as a payment gateway into your Larave
 
 | Laravel Version | Package Version |
 |-----------------|-----------------|
-| Laravel 11.x    | 2.x             |
+| Laravel 11.x +  | 2.x             |
 | Laravel 10.x    | 1.x             |
 | Laravel 9.x     | 1.x             |
 
@@ -19,7 +19,7 @@ This Laravel package integrates Tumeny Pay as a payment gateway into your Larave
 
 To install a specific version:
 ```bash
-# For Laravel 11
+# For Laravel 11+
 composer require shengamo/tumeny-pay:^2.0
 
 # For Laravel 10 and below
